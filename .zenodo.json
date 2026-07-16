@@ -6,8 +6,8 @@
   "license": "mit-license",
   "creators": [
     {
-      "name": "[FREY], [KING]",
-      "affiliation": "Cluster Headache Applied Research Collective (CHARC) / ClusterBuds Peer Support Network"
+      "name": "[LAST NAME], [FIRST NAME]",
+      "affiliation": "ClusterInfo.org"
     }
   ],
   "keywords": [
@@ -25,7 +25,7 @@
   "related_identifiers": [
     {
       "relation": "isCitedBy",
-      "identifier": "10.5281/zenodo.21399190"
+      "identifier": "10.1080/02791072.2015.1107664",
       "scheme": "doi",
       "resource_type": "publication-article"
     }
