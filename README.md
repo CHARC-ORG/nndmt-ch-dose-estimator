@@ -2,7 +2,7 @@
 
 **A harm reduction modeling tool for vaporized N,N-dimethyltryptamine (nnDMT) used as an acute abortive treatment for cluster headache**
 
-[![DOI](https://zenodo.org/badge/DOI/PLACEHOLDER.svg)](https://doi.org/PLACEHOLDER)
+[![DOI](https://zenodo.org/badge/DOI/1302987762.svg)](https://doi.org/10.5281/zenodo.21399191)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
