@@ -9,20 +9,20 @@
 
 ## Overview
 
-This tool estimates bioavailable nnDMT (in milligrams) from user-reported vaporization parameters including device type, mixture concentration, inhalation technique, and thermal efficiency. It is designed to support:
+This tool estimates bioavailable nnDMT (in milligrams) from user-reported vaporization parameters including device type, mixture concentration, inhalation technique, and thermal efficiency. This tool does NOT provide medical advice. It is designed to support:
 
 - **Harm reduction education** for the cluster headache patient community
 - **Survey instrument design** for community-based research into psychedelic CH treatment
 - **Dose-response modeling** from self-reported data, in the tradition of the Clusterbusters Medication Use Survey (Schindler et al., 2015)
 - **PS27 presentation support** — Psychedelic Science 2027, Denver
 
-The calculator covers the full range of community-reported delivery methods: 510-thread cartridges, pod systems (Vaporesso XROS, OXVA Xlim, etc.), e-rigs (Ispire Daab, Yocan Orbit, Puffco Peak Pro), direct e-mesh RDA (SS316L), sub-ohm tanks/RTAs, dedicated TC vaporizers, and glass pipe.
+The calculator covers the full range of common community-reported delivery methods: 510-thread cartridges, pod systems (Vaporesso XROS, OXVA Xlim, etc.), e-rigs (Ispire Daab, Yocan Orbit, Puffco Peak Pro), direct e-mesh RDA (SS316L), sub-ohm tanks/RTAs, dedicated TC vaporizers, and glass pipe. More may be added in the future. 
 
 ---
 
 ## Live Calculator
 
-**→ [Launch the calculator](https://USERNAME.github.io/nndmt-ch-dose-estimator)**
+**→ [Launch the calculator](https://CHARC-ORG.github.io/nndmt-ch-dose-estimator)**
 
 *(Replace USERNAME with your GitHub username after deployment)*
 
@@ -129,7 +129,7 @@ Covered devices include:
 
 Cluster headache ("suicide headache") affects approximately 0.1% of the population with attacks rated at the extreme end of the pain scale (Kip 9–10). Community surveys (Schindler et al. 2015, 2022, 2024; Clusterbusters Medication Use Survey 2023) document widespread off-label use of tryptamine compounds including psilocybin and vaporized nnDMT, with the latter showing a 67.5% complete abort rate in interim data from the Yale/VA Connecticut DMT survey (Schindler, 2025).
 
-This tool is part of a broader harm reduction and research advocacy project targeting PS27 (Psychedelic Science 2027) and collaborative work with Clusterbusters/ClusterBuds.
+This tool is part of a broader harm reduction and research advocacy project targeting PS27 (Psychedelic Science 2027) and supports collaborative work with Clusterbusters/ClusterInfo.org/ClusterBuds.
 
 ---
 
@@ -138,7 +138,7 @@ This tool is part of a broader harm reduction and research advocacy project targ
 If you use this tool in research, please cite:
 
 ```
-[Author]. (2025). nnDMT CH Abort Dose Estimator (v1.0.0). Zenodo. https://doi.org/PLACEHOLDER
+[King Frey / CHARC]. (2026). nnDMT CH Abort Dose Estimator (v1.0.0). Zenodo. https://doi.org/PLACEHOLDER
 ```
 
 See `CITATION.cff` for machine-readable citation metadata.
