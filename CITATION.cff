@@ -1,0 +1,54 @@
+cff-version: 1.2.0
+message: "If you use this software in research, please cite it using these metadata."
+type: software
+title: "nnDMT CH Abort Dose Estimator"
+abstract: >
+  A harm reduction modeling tool that estimates bioavailable N,N-dimethyltryptamine (mg)
+  from user-reported vaporization parameters for cluster headache abortive use.
+  Covers 510-thread carts, pod systems, e-rigs (Ispire Daab, Yocan Orbit),
+  direct e-mesh RDA, sub-ohm tanks, and glass pipe methods.
+  Designed to support community-based survey design and harm reduction education
+  in the cluster headache patient community.
+authors:
+  - family-names: "[LAST NAME]"
+    given-names: "[FIRST NAME]"
+    alias: "King"
+    affiliation: "ClusterInfo.org / ClusterBuds Peer Support"
+version: "1.0.0"
+date-released: "2025-01-01"
+license: MIT
+repository-code: "https://github.com/USERNAME/nndmt-ch-dose-estimator"
+url: "https://USERNAME.github.io/nndmt-ch-dose-estimator"
+keywords:
+  - cluster headache
+  - DMT
+  - dimethyltryptamine
+  - harm reduction
+  - psychedelics
+  - vaporization
+  - dose estimation
+  - headache medicine
+  - patient advocacy
+references:
+  - type: article
+    title: "Indoleamine hallucinogens in cluster headache: Results of the Clusterbusters medication use survey"
+    authors:
+      - family-names: Schindler
+        given-names: "Emmanuelle A.D."
+    journal: "Journal of Psychoactive Drugs"
+    volume: 47
+    issue: 5
+    year: 2015
+    doi: "10.1080/02791072.2015.1107664"
+  - type: article
+    title: "Dose-response study of N,N-dimethyltryptamine in humans"
+    authors:
+      - family-names: Strassman
+        given-names: "Rick J."
+      - family-names: Qualls
+        given-names: "Clifford R."
+    journal: "Archives of General Psychiatry"
+    volume: 51
+    issue: 2
+    year: 1994
+    doi: "10.1001/archpsyc.1994.03950020009001"

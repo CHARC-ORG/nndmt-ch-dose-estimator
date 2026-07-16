@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nnDMT CH Abort Dose Estimator — Harm Reduction Tool</title>
+<meta name="description" content="Estimates bioavailable nnDMT (mg) from vaporization parameters for cluster headache abortive use. Harm reduction and survey modeling tool.">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f8f8f7;
+    --surface: #ffffff;
+    --surface2: #f2f1ee;
+    --border: rgba(0,0,0,0.12);
+    --border-strong: rgba(0,0,0,0.22);
+    --text: #0b0b0b;
+    --text-sec: #52514e;
+    --text-muted: #898781;
+    --radius: 8px;
+    --blue: #2a78d6;
+    --blue-bg: #e6f1fb;
+    --blue-text: #185fa5;
+    --green: #1baf7a;
+    --green-bg: #e1f5ee;
+    --green-text: #0f6e56;
+    --amber: #eda100;
+    --amber-bg: #faeeda;
+    --amber-text: #854f0b;
+    --red: #e34948;
+    --red-bg: #fcebeb;
+    --red-text: #a32d2d;
+    --purple: #534ab7;
+    --purple-bg: #eeedfe;
+    --purple-text: #3c3489;
+    --mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
+  .container { max-width: 760px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+  header { margin-bottom: 1.5rem; }
+  header h1 { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  header p { font-size: 12px; color: var(--text-sec); line-height: 1.6; }
+  .disclaimer { background: var(--amber-bg); border: 1px solid var(--amber); border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: var(--amber-text); margin-bottom: 1.5rem; line-height: 1.6; }
+
+  .tabs { display: flex; gap: 3px; border-bottom: 1px solid var(--border); margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .tab { font-size: 13px; padding: 6px 13px; border-radius: 6px 6px 0 0; cursor: pointer; color: var(--text-sec); border: 1px solid transparent; border-bottom: none; position: relative; bottom: -1px; background: transparent; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--text); border-color: var(--border); background: var(--surface); font-weight: 500; }
+  .pane { display: none; } .pane.active { display: block; }
+
+  .grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; margin-bottom: 12px; }
+  @media(max-width: 580px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 12px; }
+  .card-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px; }
+  label { display: block; font-size: 12px; color: var(--text-sec); margin-bottom: 3px; margin-top: 9px; }
+  label:first-of-type { margin-top: 0; }
+  select, input[type=number] { width: 100%; padding: 6px 8px; font-size: 13px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--surface); color: var(--text); }
+  select:focus, input:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
+  input[type=range] { width: 100%; accent-color: var(--blue); }
+  .range-row { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); }
+
+  .device-info { border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; margin-top: 8px; background: var(--surface2); }
+  .device-name { font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+  .badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; }
+  .ba { background: var(--blue-bg); color: var(--blue-text); }
+  .bs { background: var(--green-bg); color: var(--green-text); }
+  .bw { background: var(--amber-bg); color: var(--amber-text); }
+  .bd { background: var(--red-bg); color: var(--red-text); }
+  .bp { background: var(--purple-bg); color: var(--purple-text); }
+  .device-note { font-size: 11px; color: var(--text-sec); line-height: 1.55; }
+
+  .temp-bar { height: 6px; border-radius: 3px; margin: 5px 0 2px; overflow: hidden; background: var(--surface2); }
+  .temp-fill { height: 100%; border-radius: 3px; transition: width .3s, background .3s; }
+
+  /* Gauge */
+  .gauge-card { text-align: center; }
+  .gauge-track { height: 20px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 8px 0; }
+  .gauge-fill { height: 100%; border-radius: 10px; transition: width .35s, background .35s; }
+  .gauge-val { font-size: 32px; font-weight: 600; font-family: var(--mono); }
+  .gauge-unit { font-size: 12px; color: var(--text-sec); margin-top: 2px; }
+  .gauge-range { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+  .zone-bar { display: flex; border-radius: 5px; overflow: hidden; height: 7px; margin: 10px 0 4px; }
+  .z1 { background: var(--green); flex: 15; } .z2 { background: var(--blue); flex: 20; }
+  .z3 { background: var(--amber); flex: 15; } .z4 { background: var(--red); flex: 10; }
+  .zone-lbl { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); }
+
+  .flag { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; margin-top: 8px; }
+  .fs { background: var(--green-bg); color: var(--green-text); }
+  .fa { background: var(--blue-bg); color: var(--blue-text); }
+  .fm { background: var(--amber-bg); color: var(--amber-text); }
+  .fb { background: var(--red-bg); color: var(--red-text); }
+  .fp { background: var(--purple-bg); color: var(--purple-text); }
+
+  .temp-readout { margin-top: 8px; padding: 8px 10px; background: var(--surface2); border-radius: 6px; font-size: 11px; line-height: 1.7; color: var(--text-sec); }
+  .warn-box { background: var(--amber-bg); border: 1px solid var(--amber); border-radius: 6px; padding: 8px 11px; font-size: 12px; color: var(--amber-text); margin-top: 8px; display: none; line-height: 1.6; }
+  .warn-box.show { display: block; }
+  .haz-box { background: var(--red-bg); border: 1px solid var(--red); border-radius: 6px; padding: 8px 11px; font-size: 12px; color: var(--red-text); margin-top: 6px; display: none; line-height: 1.6; }
+  .haz-box.show { display: block; }
+
+  .math-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-sec); padding: 2px 0; }
+  .math-row .v { font-family: var(--mono); font-size: 11px; color: var(--text); }
+  .math-row.pen .v { color: var(--amber-text); }
+  .hdiv { border: none; border-top: 1px solid var(--border); margin: 5px 0; }
+  .math-total { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; padding-top: 6px; border-top: 1px solid var(--border); margin-top: 3px; }
+  .math-total .v { font-family: var(--mono); }
+  .note { font-size: 11px; color: var(--text-muted); line-height: 1.6; margin-top: 10px; }
+
+  /* DB table */
+  .seccap { font-size: 13px; font-weight: 600; color: var(--text); margin: 18px 0 8px; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { text-align: left; font-size: 11px; font-weight: 600; color: var(--text-muted); padding: 5px 8px; border-bottom: 1px solid var(--border); }
+  td { padding: 5px 8px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--surface2); }
+  .tr-warn td { background: #fef9ec !important; }
+  .tr-danger td { background: #fdf0f0 !important; }
+
+  /* Methods tab */
+  .method-block { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; }
+  .method-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .method-formula { font-family: var(--mono); font-size: 12px; background: var(--surface2); border-radius: 5px; padding: 10px 12px; margin: 8px 0; white-space: pre-wrap; color: var(--blue-text); }
+  .method-body { font-size: 12px; color: var(--text-sec); line-height: 1.7; }
+
+  footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-muted); line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>nnDMT CH Abort — Dose Estimator</h1>
+  <p>Estimates bioavailable N,N-DMT (mg) from device, mixture, and technique parameters for cluster headache abortive use. Harm reduction and survey modeling tool — not a clinical dosing guide.</p>
+</header>
+
+<div class="disclaimer">
+  <strong>Research instrument only.</strong> Individual uncertainty ±18–40% depending on method. DMT is a Schedule I substance in the US and regulated in most jurisdictions. This tool supports harm reduction education and survey design for the cluster headache community. It does not constitute medical advice.
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="st('calc')">Calculator</div>
+  <div class="tab" onclick="st('db')">Device database</div>
+  <div class="tab" onclick="st('methods')">Model methods</div>
+</div>
+
+<!-- CALCULATOR -->
+<div id="pane-calc" class="pane active">
+<div class="grid2">
+ <div>
+  <div class="card">
+   <div class="card-label">Device setup</div>
+   <label>Device category</label>
+   <select id="devCat" onchange="switchCat()">
+     <option value="510">510-thread cart + battery (most common)</option>
+     <option value="pod">Pod system (XROS, Xlim, Caliburn…)</option>
+     <option value="erig">E-rig / TC wax device (Ispire Daab, Yocan Orbit…)</option>
+     <option value="emesh">E-Mesh RDA — direct freebase (most efficient)</option>
+     <option value="subohm">Sub-ohm tank / RTA — e-liquid method</option>
+     <option value="tc">Dedicated TC vaporizer (Mighty, Volcano…)</option>
+     <option value="glass">Glass pipe + torch</option>
+     <option value="custom">Custom — manual specs</option>
+   </select>
+
+   <div id="sec510">
+     <label>Coil type</label>
+     <select id="coil510" onchange="calc()">
+       <option value="ccell">CCELL ceramic (recommended)</option>
+       <option value="quartz">Quartz coil</option>
+       <option value="cotton">Cotton wick</option>
+       <option value="unknown">Unknown</option>
+     </select>
+     <label>Coil resistance (Ω)</label>
+     <select id="res510" onchange="calc()">
+       <option value="0.5">0.5Ω sub-ohm</option>
+       <option value="1.0" selected>1.0Ω standard</option>
+       <option value="1.5">1.5Ω</option>
+       <option value="2.0">2.0Ω</option>
+     </select>
+     <label>Battery voltage</label>
+     <select id="volt510" onchange="calc()">
+       <option value="2.4">2.4V — cool</option>
+       <option value="2.8" selected>2.8V — optimal low</option>
+       <option value="3.2">3.2V — mid</option>
+       <option value="3.4">3.4V — upper optimal</option>
+       <option value="3.6">3.6V — combustion begins</option>
+       <option value="4.0">4.0V — significant combustion</option>
+       <option value="4.5">4.5V+ — heavy combustion</option>
+     </select>
+   </div>
+
+   <div id="secPod" style="display:none;">
+     <label>Pod device</label>
+     <select id="podDev" onchange="calc()">
+       <optgroup label="Vaporesso XROS">
+         <option value="xros_pro">XROS Pro (5–28W adj.)</option>
+         <option value="xros4">XROS 4 (5–20W adj.)</option>
+         <option value="xros3">XROS 3 (11W fixed)</option>
+         <option value="xros2">XROS 2 (11W fixed)</option>
+       </optgroup>
+       <optgroup label="OXVA Xlim">
+         <option value="xlim_sq2">Xlim SQ2 (5–30W adj.)</option>
+         <option value="xlim_pro">Xlim Pro (5–30W adj.)</option>
+       </optgroup>
+       <optgroup label="Other">
+         <option value="calib_g3">Caliburn G3 (15W)</option>
+         <option value="vinci3">VOOPOO Vinci 3 (5–50W)</option>
+         <option value="nord5">SMOK Nord 5 (5–80W)</option>
+       </optgroup>
+     </select>
+     <label>Pod resistance</label>
+     <select id="podRes" onchange="calc()">
+       <option value="0.4">0.4Ω (RDTL — hot)</option>
+       <option value="0.6">0.6Ω (loose MTL/RDTL)</option>
+       <option value="0.8" selected>0.8Ω (standard MTL)</option>
+       <option value="1.0">1.0Ω (strict MTL — cool)</option>
+       <option value="1.2">1.2Ω (tight MTL — coolest)</option>
+     </select>
+     <label>Wattage override</label>
+     <select id="podW" onchange="calc()">
+       <option value="auto">Auto (device default)</option>
+       <option value="8">8W</option><option value="10">10W</option><option value="12">12W</option>
+       <option value="14">14W</option><option value="16">16W</option><option value="20">20W</option>
+       <option value="25">25W</option><option value="30">30W</option>
+     </select>
+   </div>
+
+   <div id="secErig" style="display:none;">
+     <label>Device</label>
+     <select id="erigDev" onchange="updateErigDev()">
+       <optgroup label="Induction e-rigs (highest precision)">
+         <option value="ispire_daab">Ispire Daab — induction TC, all-glass (121–427°C)</option>
+         <option value="dr_dabber">Dr. Dabber Switch — induction, 25 settings</option>
+       </optgroup>
+       <optgroup label="Ceramic atomizer e-rigs">
+         <option value="puffco_peak">Puffco Peak Pro — ceramic TC</option>
+         <option value="focus_v">Focus V Carta 2 — ceramic TC</option>
+         <option value="puffco_pivot">Puffco Pivot — ceramic TC</option>
+       </optgroup>
+       <optgroup label="Quartz wax pens (voltage-controlled)">
+         <option value="yocan_orbit_low">Yocan Orbit — 3.4V / White ★ only safe setting</option>
+         <option value="yocan_orbit_mid">Yocan Orbit — 3.7V / Blue ⚠ combustion range</option>
+         <option value="yocan_orbit_high">Yocan Orbit — 4.0V / Green ✗ avoid</option>
+         <option value="yocan_evolve">Yocan Evolve Plus — quartz dual coil</option>
+       </optgroup>
+     </select>
+     <div id="erigTCWrap" style="display:none;">
+       <label>Set temperature (°C)</label>
+       <input type="range" id="erigTC" min="120" max="280" value="175" step="5"
+         oninput="document.getElementById('erigTCOut').textContent=this.value+'°C';calc();"/>
+       <div class="range-row"><span>120°C</span><span id="erigTCOut">175°C</span><span>280°C</span></div>
+     </div>
+     <div id="erigInfoCard" class="device-info"></div>
+   </div>
+
+   <div id="secEmesh" style="display:none;">
+     <div class="device-info" style="margin-top:4px;">
+       <div class="device-name">Direct E-Mesh RDA (SS316L)</div>
+       <div class="badges"><span class="badge bp">~93% efficiency</span><span class="badge bs">TC-SS mode</span><span class="badge bw">Advanced setup</span></div>
+       <div class="device-note">DMT freebase powder loaded directly on SS316L mesh. No liquid carrier. 15mg on e-mesh ≈ 20–25mg via Yocan. Requires box mod with TC-SS capability (Vaporesso GEN, GeekVape Aegis) and Wotofo Profile or Vandy Vape Mesh RDA.</div>
+     </div>
+     <label>Mesh fineness</label>
+     <select id="meshFine" onchange="calc()">
+       <option value="0.91">150 mesh</option>
+       <option value="0.93" selected>200 mesh (standard)</option>
+       <option value="0.95">400 mesh (finer)</option>
+     </select>
+     <label>TC temperature (°C)</label>
+     <input type="range" id="meshTemp" min="160" max="230" value="200" step="5"
+       oninput="document.getElementById('meshTOut').textContent=this.value+'°C';calc();"/>
+     <div class="range-row"><span>160°C</span><span id="meshTOut">200°C</span><span>230°C</span></div>
+     <label>DMT loaded — freebase powder (mg)</label>
+     <input type="number" id="meshMg" value="15" min="5" max="60" step="1" onchange="calc()"/>
+     <p class="note">Community consensus: start at 10–15mg. One hit delivers the entire loaded amount.</p>
+   </div>
+
+   <div id="secSubohm" style="display:none;">
+     <label>Device / atomizer</label>
+     <select id="sohmDev" onchange="calc()">
+       <optgroup label="RDA"><option value="rda_ss_tc">RDA + SS316L mesh (TC)</option><option value="rda_ceramic">RDA + ceramic coil (VW)</option><option value="rda_cotton">RDA + cotton wick (VW)</option></optgroup>
+       <optgroup label="Tank / RTA"><option value="hellvape">Hellvape Dead Rabbit V3 RTA</option><option value="gk_z2">GeekVape Z2 Tank (0.2Ω SS)</option><option value="gk_zeus">GeekVape Zeus (0.4Ω mesh)</option><option value="vs_nrg">Vaporesso NRG Tank</option><option value="freemax">Freemax Mesh Pro</option></optgroup>
+     </select>
+     <label>Coil resistance (Ω)</label>
+     <select id="soRes" onchange="calc()"><option value="0.2">0.2Ω</option><option value="0.3" selected>0.3Ω</option><option value="0.4">0.4Ω</option><option value="0.5">0.5Ω</option><option value="0.6">0.6Ω</option><option value="0.8">0.8Ω</option></select>
+     <label>Wattage</label>
+     <select id="soW" onchange="updateSOMode()"><option value="15">15W</option><option value="18">18W</option><option value="20" selected>20W</option><option value="25">25W</option><option value="30">30W</option><option value="35">35W</option></select>
+     <label>Mode</label>
+     <select id="soMode" onchange="updateSOMode()"><option value="vw">Variable wattage (VW)</option><option value="tc">TC — SS316L temp limited</option></select>
+     <div id="soTCWrap" style="display:none;">
+       <label>TC set temperature (°C)</label>
+       <input type="range" id="soTC" min="160" max="230" value="195" step="5"
+         oninput="document.getElementById('soTCOut').textContent=this.value+'°C';calc();"/>
+       <div class="range-row"><span>160°C</span><span id="soTCOut">195°C</span><span>230°C</span></div>
+     </div>
+   </div>
+
+   <div id="secTC" style="display:none;">
+     <label>Set temperature (°C)</label>
+     <input type="range" id="tcT" min="140" max="240" value="175" step="5"
+       oninput="document.getElementById('tcTOut').textContent=this.value+'°C';calc();"/>
+     <div class="range-row"><span>140°C</span><span id="tcTOut">175°C</span><span>240°C</span></div>
+   </div>
+
+   <div id="secGlass" style="display:none;">
+     <div class="device-info" style="margin-top:4px;">
+       <div class="device-name">Glass pipe + torch</div>
+       <div class="badges"><span class="badge bd">400–600°C+</span><span class="badge bd">Majority combusted</span><span class="badge bw">Not recommended during attack</span></div>
+       <div class="device-note">Hot glass + DMT disorientation = burn and fall hazard during a CH attack.</div>
+     </div>
+     <label>User technique level</label>
+     <select id="glassExp" onchange="calc()"><option value="0.28">Novice (~28%)</option><option value="0.38">Experienced (~38%)</option><option value="0.45">Expert (~45%)</option></select>
+   </div>
+
+   <div id="secCustom" style="display:none;">
+     <label>Voltage (V)</label><input type="number" id="cV" value="3.2" min="2.0" max="5.0" step="0.1" onchange="calc()"/>
+     <label>Resistance (Ω)</label><input type="number" id="cR" value="1.0" min="0.1" max="3.0" step="0.1" onchange="calc()"/>
+     <label>Coil material</label>
+     <select id="cMat" onchange="calc()"><option value="ceramic">Ceramic / CCELL</option><option value="ss316l">SS316L mesh</option><option value="quartz">Quartz</option><option value="cotton">Cotton wick</option></select>
+   </div>
+  </div>
+
+  <div id="secMixture" class="card">
+   <div class="card-label">Mixture</div>
+   <label>Liquid volume (ml)</label>
+   <select id="vol" onchange="calc()">
+     <option value="0.5">0.5ml (small 510)</option><option value="1.0" selected>1.0ml (510 cart)</option>
+     <option value="1.5">1.5ml</option><option value="2.0">2.0ml (pod)</option>
+     <option value="3.0">3.0ml (tank)</option><option value="4.5">4.5ml (large tank)</option>
+   </select>
+   <label>DMT concentration (mg/ml)</label>
+   <select id="conc" onchange="calc()">
+     <option value="75">75 mg/ml (pod-friendly)</option><option value="125">125 mg/ml</option>
+     <option value="200">200 mg/ml</option><option value="250" selected>250 mg/ml (1:3 standard)</option>
+     <option value="350">350 mg/ml</option><option value="500">500 mg/ml (1:1 max)</option>
+   </select>
+   <label>Carrier</label>
+   <select id="carrier" onchange="calc()"><option value="1.0" selected>PG only</option><option value="0.93">50/50 PG/VG</option><option value="0.85">High VG</option></select>
+   <label>Crystallization</label>
+   <select id="crys" onchange="calc()"><option value="1.0">None</option><option value="0.95">Occasional</option><option value="0.85">Frequent</option></select>
+   <label>Pre-warmed?</label>
+   <select id="warm" onchange="calc()"><option value="0">No</option><option value="0.08">Yes</option></select>
+  </div>
+ </div>
+
+ <div>
+  <div class="card">
+   <div class="card-label">Technique</div>
+   <label>Inhalation style</label>
+   <select id="inhale" onchange="calc()">
+     <option value="0.65">Mouth-to-lung (MTL) — ~55ml/puff</option>
+     <option value="0.76">Restricted DTL (RDTL)</option>
+     <option value="0.88" selected>Direct-to-lung (DTL) — ~500ml/puff</option>
+     <option value="0.75">Mixed / unsure</option>
+   </select>
+   <label>Puff duration</label>
+   <select id="pdur" onchange="calc()"><option value="0.6">Under 2 sec</option><option value="0.8">2–3 sec</option><option value="1.0" selected>3–5 sec (recommended)</option><option value="1.1">5–7 sec</option><option value="1.15">7–10 sec</option></select>
+   <label>Hold time before exhale</label>
+   <select id="hold" onchange="calc()"><option value="0.45">Immediate exhale</option><option value="0.65">Under 5 sec</option><option value="0.80">5–10 sec</option><option value="0.92" selected>10–15 sec</option><option value="1.00">15+ sec (max absorption)</option></select>
+   <div id="puffSection">
+     <label>Number of puffs</label>
+     <input type="range" id="puffs" min="1" max="6" value="2" step="1"
+       oninput="document.getElementById('puffsOut').textContent=this.value;calc();"/>
+     <div class="range-row"><span>1</span><span id="puffsOut" style="font-weight:600;">2</span><span>6</span></div>
+     <label>Interval between puffs</label>
+     <select id="interval" onchange="calc()"><option value="0.7">Chain vaped — no wait</option><option value="0.9">15–30 sec</option><option value="1.0" selected>60–90 sec (onset check)</option><option value="0.85">2+ min</option></select>
+     <label>Estimated puffs per full load</label>
+     <select id="ppc" onchange="calc()"><option value="15">~15 (heavy DTL)</option><option value="25">~25</option><option value="40" selected>~40 (typical 510)</option><option value="60">~60 (pod MTL)</option><option value="80">~80 (pod light MTL)</option><option value="120">~120 (large tank)</option></select>
+   </div>
+  </div>
+
+  <div class="card gauge-card">
+   <div class="card-label">Estimated bioavailable DMT</div>
+   <div class="gauge-track"><div class="gauge-fill" id="gFill" style="width:0%;background:#1baf7a;"></div></div>
+   <div class="gauge-val" id="gVal">—</div>
+   <div class="gauge-unit">mg estimated (single abort attempt)</div>
+   <div class="gauge-range" id="gRange"></div>
+   <div id="gFlag"></div>
+   <div style="margin-top:14px;">
+     <div class="zone-bar"><div class="z1"></div><div class="z2"></div><div class="z3"></div><div class="z4"></div></div>
+     <div class="zone-lbl"><span>Sub-threshold<br>&lt;5mg</span><span style="text-align:center;">Abort window<br>5–15mg</span><span style="text-align:center;">Moderate<br>15–25mg</span><span style="text-align:right;">Breakthrough<br>&gt;25mg</span></div>
+   </div>
+   <div class="temp-readout" id="tempReadout"></div>
+   <div class="warn-box" id="warnBox"></div>
+   <div class="haz-box" id="hazBox"></div>
+  </div>
+
+  <div class="card">
+   <div class="card-label">Calculation breakdown</div>
+   <div id="mathBreak"></div>
+  </div>
+ </div>
+</div>
+<p class="note">Model: ceramic T≈80+(W×4.5)°C. TC/induction devices use set temperature directly. E-mesh uses loaded mass directly. Sources: Strassman & Qualls 1994 (pharmacokinetics); Behar et al. 2015 (puff topography); DMT-Nexus e-mesh thread (community efficiency data).</p>
+</div>
+
+<!-- DEVICE DB -->
+<div id="pane-db" class="pane">
+  <div class="seccap">E-rigs & TC wax devices — DMT profiles</div>
+  <div style="overflow-x:auto;"><table><thead><tr><th>Device</th><th>Heating</th><th>DMT temp range</th><th>Efficiency</th><th>Notes</th></tr></thead><tbody>
+    <tr><td><strong>Ispire Daab</strong></td><td>Induction / glass</td><td>160–185°C (set)</td><td><span class="flag fp" style="margin:0;font-size:10px;">0.94</span></td><td>Best e-rig — all-glass path, true TC</td></tr>
+    <tr><td><strong>Dr. Dabber Switch</strong></td><td>Induction</td><td>Settings 6–9</td><td><span class="flag fp" style="margin:0;font-size:10px;">0.91</span></td><td>25 heat levels, excellent precision</td></tr>
+    <tr><td><strong>Puffco Peak Pro</strong></td><td>Ceramic atomizer</td><td>Lowest preset ~165°C</td><td><span class="flag fa" style="margin:0;font-size:10px;">0.88</span></td><td>Use Pearl/lowest setting</td></tr>
+    <tr><td><strong>Focus V Carta 2</strong></td><td>Ceramic atomizer</td><td>Lowest preset</td><td><span class="flag fa" style="margin:0;font-size:10px;">0.87</span></td><td>App-controlled TC</td></tr>
+    <tr class="tr-warn"><td><strong>Yocan Orbit 3.4V ★</strong></td><td>Quartz cup + terp pearls</td><td>~210°C (borderline)</td><td><span class="flag fm" style="margin:0;font-size:10px;">0.71</span></td><td>White LED only — lowest setting</td></tr>
+    <tr class="tr-danger"><td><strong>Yocan Orbit 3.7V</strong></td><td>Quartz cup + terp pearls</td><td>~234°C combustion</td><td><span class="flag fb" style="margin:0;font-size:10px;">0.55</span></td><td>Blue LED — avoid for DMT</td></tr>
+    <tr class="tr-danger"><td><strong>Yocan Orbit 4.0V</strong></td><td>Quartz cup + terp pearls</td><td>~260°C heavy comb.</td><td><span class="flag fb" style="margin:0;font-size:10px;">0.38</span></td><td>Green LED — majority DMT destroyed</td></tr>
+    <tr><td><strong>Yocan Evolve Plus</strong></td><td>Quartz dual coil</td><td>~220°C variable</td><td><span class="flag fm" style="margin:0;font-size:10px;">0.65</span></td><td>Historically common — inconsistent temp</td></tr>
+  </tbody></table></div>
+
+  <div class="seccap">510-thread carts</div>
+  <div style="overflow-x:auto;"><table><thead><tr><th>Setup</th><th>Est. temp</th><th>Efficiency</th><th>Notes</th></tr></thead><tbody>
+    <tr><td>CCELL ceramic 2.4–2.8V (1Ω)</td><td>165–185°C</td><td><span class="flag fa" style="margin:0;font-size:10px;">0.88</span></td><td>Optimal — recommended</td></tr>
+    <tr><td>CCELL ceramic 3.0–3.4V</td><td>195–215°C</td><td><span class="flag fm" style="margin:0;font-size:10px;">0.78</span></td><td>Upper range — borderline</td></tr>
+    <tr class="tr-danger"><td>CCELL ceramic 3.6V+</td><td>230°C+</td><td><span class="flag fb" style="margin:0;font-size:10px;">0.55</span></td><td>Combustion</td></tr>
+    <tr><td>Quartz 2.4–2.8V</td><td>175–190°C</td><td><span class="flag fm" style="margin:0;font-size:10px;">0.72</span></td><td>Hot-spot risk</td></tr>
+    <tr class="tr-danger"><td>Cotton wick (any V)</td><td>Uncontrolled</td><td><span class="flag fb" style="margin:0;font-size:10px;">0.42</span></td><td>Avoid</td></tr>
+  </tbody></table></div>
+
+  <div class="seccap">Pod systems — estimated temp at default wattage</div>
+  <div style="overflow-x:auto;"><table><thead><tr><th>Device</th><th>0.4Ω</th><th>0.6Ω</th><th>0.8Ω</th><th>1.0Ω</th><th>HR rating</th></tr></thead><tbody>
+    <tr><td>XROS Pro (5–28W adj.)</td><td style="color:var(--amber-text);">~179°C</td><td style="color:var(--green-text);">~171°C</td><td style="color:var(--green-text);">~152°C*</td><td style="color:var(--amber-text);">~134°C*</td><td><span class="flag fa" style="margin:0;font-size:10px;">Recommended</span></td></tr>
+    <tr><td>XROS 3/2 (11W fixed)</td><td style="color:var(--red-text);">~130°C</td><td style="color:var(--amber-text);">~130°C</td><td style="color:var(--amber-text);">~130°C</td><td style="color:var(--amber-text);">~130°C</td><td><span class="flag fm" style="margin:0;font-size:10px;">Adequate</span></td></tr>
+    <tr><td>Xlim SQ2 (5–30W adj.)</td><td style="color:var(--amber-text);">~193°C</td><td style="color:var(--green-text);">~171°C</td><td style="color:var(--green-text);">~152°C</td><td style="color:var(--amber-text);">~134°C</td><td><span class="flag fa" style="margin:0;font-size:10px;">Recommended</span></td></tr>
+    <tr class="tr-warn"><td>SMOK Nord 5 (5–80W adj.)</td><td style="color:var(--red-text);">~238°C</td><td style="color:var(--red-text);">~206°C</td><td style="color:var(--green-text);">~179°C</td><td style="color:var(--green-text);">~152°C</td><td><span class="flag fm" style="margin:0;font-size:10px;">Manual adjust req.</span></td></tr>
+  </tbody></table></div>
+  <p class="note">*Fixed-wattage pod devices at 11W → ~130°C — below DMT vaporization point. Use adjustable devices or switch to 0.6Ω for better temp at fixed wattage.</p>
+</div>
+
+<!-- METHODS -->
+<div id="pane-methods" class="pane">
+  <div class="method-block">
+    <div class="method-title">Core dose equation (liquid-based methods)</div>
+    <div class="method-formula">mg_bioavailable =
+  (vol_ml × conc_mg_per_ml) ÷ puffs_per_cart
+  × puffs_taken
+  × temperature_efficiency
+  × carrier_factor
+  × crystallization_factor
+  × (puff_duration_factor × inhalation_style_factor)
+  × hold_retention_factor
+  × puff_interval_factor</div>
+    <div class="method-body">Each factor reduces the theoretical maximum based on pharmacokinetic and device physics data. The largest sources of variance are temperature efficiency (device-dependent) and concentration uncertainty (especially in pre-filled or unverified cartridges).</div>
+  </div>
+
+  <div class="method-block">
+    <div class="method-title">E-mesh equation (direct freebase — no liquid)</div>
+    <div class="method-formula">mg_bioavailable = mg_loaded × mesh_efficiency × inhalation_factor × hold_retention</div>
+    <div class="method-body">The e-mesh method bypasses the concentration/volume calculation entirely. Community data (DMT-Nexus e-mesh thread, 2019–2024) indicates 15mg loaded on SS316L 200-mesh at 190–210°C TC delivers approximately equivalent effect to 20–25mg via standard Yocan methods — consistent with ~93% efficiency vs. ~55–65% for quartz wax pen.</div>
+  </div>
+
+  <div class="method-block">
+    <div class="method-title">Temperature model</div>
+    <div class="method-formula">T_coil (°C) ≈ 80 + (W × 4.5)
+W = V² ÷ R (Ohm's Law)</div>
+    <div class="method-body">
+      Ceramic mesh coil steady-state temperature estimate. Validated qualitatively against published cannabis vaping topography data (voltage vs. coil temperature in 510-thread systems).<br><br>
+      <strong>DMT vaporization window:</strong> 160–215°C optimal. &lt;160°C = under-vaporization. &gt;220°C = combustion begins.<br>
+      <strong>TC/induction devices:</strong> Set temperature used directly — no estimation needed.<br>
+      <strong>Ispire Daab:</strong> Induction heating into borosilicate glass cup. Only the metal within the glass walls is heated. No coil contamination, most precise portable device available.
+    </div>
+  </div>
+
+  <div class="method-block">
+    <div class="method-title">Inhalation style factors</div>
+    <div class="method-formula">MTL: 0.65  (puff volume ~55ml, Behar et al. 2015)
+RDTL: 0.76  (intermediate)
+DTL: 0.88   (puff volume ~500ml, Prasad et al. 2022)</div>
+    <div class="method-body">Direct-to-lung inhalation delivers ~9x the aerosol volume of mouth-to-lung per puff. This is the largest technique variable in the model. Puff duration is also a primary determinant of aerosol volume (not flow rate), per published topography research.</div>
+  </div>
+
+  <div class="method-block">
+    <div class="method-title">Uncertainty</div>
+    <div class="method-body">
+      <strong>E-mesh:</strong> ±18% — tighter because loaded mass is directly measured.<br>
+      <strong>Liquid methods — known device/concentration:</strong> ±25–30%.<br>
+      <strong>Liquid methods — unknown/pre-filled cart:</strong> ±35–45%. Pre-filled cart concentration is unverifiable without gas chromatography (Bunk Police documentation notes most pre-filled DMT carts are underdosed vs. advertised).<br><br>
+      This tool produces estimated ranges for harm reduction education and survey design. It is not a clinical dosing instrument.
+    </div>
+  </div>
+
+  <div class="method-block">
+    <div class="method-title">Sources & citation</div>
+    <div class="method-body">
+      Strassman RJ & Qualls CR (1994). Dose-response study of N,N-dimethyltryptamine in humans. <em>Archives of General Psychiatry</em> 51(2):85–97.<br>
+      Good MA et al. (2023). Pharmacokinetics of N,N-dimethyltryptamine in humans. <em>Clinical Pharmacokinetics</em>.<br>
+      Behar RZ et al. (2015). Development, validation and application of a device to measure e-cigarette users' puffing topography. <em>Nicotine & Tobacco Research</em>.<br>
+      DMT-Nexus forum — direct e-mesh thread (community efficiency data, 2019–2024).<br>
+      Schindler EAD et al. (2015). Indoleamine hallucinogens in cluster headache. <em>Journal of Psychoactive Drugs</em> 47(5):372–381.<br>
+      Schindler EAD (2025). DMT in cluster headache — interim survey results. 20th Annual Clusterbusters Meeting, Grapevine TX.
+    </div>
+  </div>
+</div>
+
+<footer>
+  <strong>nnDMT CH Abort Dose Estimator v1.0</strong> · Harm reduction modeling tool for cluster headache patient community research ·
+  Built for PS27 (Psychedelic Science 2027) · ClusterInfo.org / ClusterBuds ·
+  <a href="https://github.com/USERNAME/nndmt-ch-dose-estimator">GitHub</a> ·
+  MIT License · Not medical advice
+</footer>
+
+</div>
+
+<script>
+const podP={xros_pro:{dW:{0.4:22,0.6:18,0.8:16,1.0:12,1.2:10}},xros4:{dW:{0.4:18,0.6:16,0.8:14,1.0:11,1.2:9}},xros3:{dW:{0.4:11,0.6:11,0.8:11,1.0:11,1.2:11}},xros2:{dW:{0.4:11,0.6:11,0.8:11,1.0:11,1.2:11}},xlim_sq2:{dW:{0.4:25,0.6:20,0.8:16,1.0:12,1.2:10}},xlim_pro:{dW:{0.4:25,0.6:20,0.8:16,1.0:12,1.2:10}},calib_g3:{dW:{0.4:14,0.6:13,0.8:12,1.0:10,1.2:8}},vinci3:{dW:{0.4:30,0.6:25,0.8:20,1.0:15,1.2:12}},nord5:{dW:{0.4:35,0.6:28,0.8:22,1.0:16,1.2:12}}};
+const sohmP={rda_ss_tc:{coil:'ss316l',eff:0.92},rda_ceramic:{coil:'ceramic',eff:0.87},rda_cotton:{coil:'cotton',eff:0.58},hellvape:{coil:'ss316l',eff:0.85},gk_z2:{coil:'ss316l',eff:0.86},gk_zeus:{coil:'ss316l',eff:0.85},vs_nrg:{coil:'ss316l',eff:0.80},freemax:{coil:'ss316l',eff:0.80}};
+const erigP={
+  ispire_daab:{name:'Ispire Daab',tc:true,eff:0.94,note:'Induction heating — heat transfers only to borosilicate glass cup via electromagnetic field. All-glass vapor path. Zero coil contamination. Set 170–180°C for optimal DMT window.',badges:[{t:'Induction TC',c:'bp'},{t:'All-glass path',c:'bs'},{t:'Best precision',c:'bs'}]},
+  dr_dabber:{name:'Dr. Dabber Switch',tc:true,eff:0.91,note:'Induction heating, 25 heat levels. Levels 6–9 approx 160–200°C. Excellent temperature control.',badges:[{t:'Induction',c:'bp'},{t:'25 heat levels',c:'bs'}]},
+  puffco_peak:{name:'Puffco Peak Pro',tc:true,eff:0.88,note:'Ceramic atomizer, app-controlled. Use Pearl (lowest) preset ~165°C for DMT.',badges:[{t:'Ceramic TC',c:'ba'},{t:'App-controlled',c:'ba'}]},
+  focus_v:{name:'Focus V Carta 2',tc:true,eff:0.87,note:'Ceramic atomizer, app-controlled TC. Similar to Puffco. Lowest preset for DMT.',badges:[{t:'Ceramic TC',c:'ba'}]},
+  puffco_pivot:{name:'Puffco Pivot',tc:true,eff:0.87,note:'Ceramic, 4 presets. Lowest setting for DMT.',badges:[{t:'Ceramic TC',c:'ba'}]},
+  yocan_orbit_low:{name:'Yocan Orbit — 3.4V (White)',tc:false,tempC:210,eff:0.71,note:'3.4V / 0.4Ω = 28.9W → ~210°C. Upper edge of optimal window. Terp pearls improve even heat distribution but quartz still creates hot-spot risk. This is the ONLY acceptable Orbit setting for DMT.',badges:[{t:'0.4Ω quartz',c:'bw'},{t:'~210°C borderline',c:'bw'},{t:'White LED only',c:'bw'}]},
+  yocan_orbit_mid:{name:'Yocan Orbit — 3.7V (Blue)',tc:false,tempC:234,eff:0.55,note:'3.7V / 0.4Ω = 34.2W → ~234°C. Above combustion threshold. Significant DMT degradation.',badges:[{t:'~234°C — combustion',c:'bd'},{t:'Avoid',c:'bd'}]},
+  yocan_orbit_high:{name:'Yocan Orbit — 4.0V (Green)',tc:false,tempC:260,eff:0.38,note:'4.0V / 0.4Ω = 40W → ~260°C. Heavy combustion — majority of DMT destroyed.',badges:[{t:'~260°C — heavy combustion',c:'bd'},{t:'Do not use for DMT',c:'bd'}]},
+  yocan_evolve:{name:'Yocan Evolve Plus',tc:false,tempC:220,eff:0.65,note:'Quartz dual coil, ~3.4–4.2V variable. Historically common in CH community pre-2022. Inconsistent temperature. Ispire Daab or CCELL 510 cart at 2.8V are strongly preferred.',badges:[{t:'Quartz dual coil',c:'bw'},{t:'Historically common',c:'ba'},{t:'Inconsistent temp',c:'bw'}]},
+};
+function wToT(w){return Math.round(80+w*4.5);}
+function tEff(t,mat){const b=mat==='ss316l'||mat==='ceramic'?0.90:mat==='quartz'?0.72:0.42;if(t<150)return b*0.33;if(t<160)return b*0.72;if(t<=185)return b;if(t<=215)return b*0.89;if(t<=230)return b*0.72;if(t<=260)return b*0.54;return b*0.30;}
+function st(n){['calc','db','methods'].forEach((name,i)=>{document.querySelectorAll('.tab')[i].classList.toggle('active',name===n);document.getElementById('pane-'+name).classList.toggle('active',name===n);});}
+function switchCat(){
+  const cat=document.getElementById('devCat').value;
+  ['510','Pod','Erig','Emesh','Subohm','TC','Glass','Custom'].forEach(s=>{const el=document.getElementById('sec'+s);if(el)el.style.display='none';});
+  const map={510:'510',pod:'Pod',erig:'Erig',emesh:'Emesh',subohm:'Subohm',tc:'TC',glass:'Glass',custom:'Custom'};
+  const el=document.getElementById('sec'+map[cat]);if(el)el.style.display='block';
+  const isEmesh=cat==='emesh';
+  document.getElementById('secMixture').style.display=isEmesh?'none':'block';
+  document.getElementById('puffSection').style.display=isEmesh?'none':'block';
+  if(cat==='pod'){document.getElementById('vol').value='2';document.getElementById('ppc').value='60';document.getElementById('inhale').value='0.65';}
+  if(cat==='subohm'){document.getElementById('vol').value='3.0';document.getElementById('ppc').value='40';document.getElementById('inhale').value='0.88';}
+  if(cat==='erig'){document.getElementById('vol').value='1.0';document.getElementById('ppc').value='25';document.getElementById('inhale').value='0.88';updateErigDev();}
+  calc();
+}
+function updateErigDev(){
+  const key=document.getElementById('erigDev').value;const p=erigP[key];if(!p)return;
+  document.getElementById('erigTCWrap').style.display=p.tc?'block':'none';
+  const bH=p.badges.map(b=>`<span class="badge ${b.c}">${b.t}</span>`).join('');
+  document.getElementById('erigInfoCard').innerHTML=`<div class="device-name">${p.name}</div><div class="badges">${bH}</div><div class="device-note">${p.note}</div>`;
+  calc();
+}
+function updateSOMode(){document.getElementById('soTCWrap').style.display=document.getElementById('soMode').value==='tc'?'block':'none';calc();}
+function calc(){
+  const cat=document.getElementById('devCat').value;
+  let tempC,tempEff,tNote,tCol;
+  if(cat==='510'){
+    const v=parseFloat(document.getElementById('volt510').value);const r=parseFloat(document.getElementById('res510').value);
+    const mt=document.getElementById('coil510').value==='ccell'?'ceramic':document.getElementById('coil510').value==='quartz'?'quartz':'cotton';
+    const w=(v*v)/r;tempC=wToT(w);tempEff=tEff(tempC,mt);tNote=`${v}V / ${r}Ω = ${w.toFixed(1)}W → ~${tempC}°C`;
+  }else if(cat==='pod'){
+    const dev=document.getElementById('podDev').value;const res=parseFloat(document.getElementById('podRes').value);
+    const pd=podP[dev];const wSel=document.getElementById('podW').value;
+    const w=wSel==='auto'?(pd?pd.dW[res]||14:14):parseFloat(wSel);
+    tempC=wToT(w);tempEff=tEff(tempC,'ceramic');tNote=`${dev} ${res}Ω @ ${w}W → ~${tempC}°C`;
+  }else if(cat==='erig'){
+    const key=document.getElementById('erigDev').value;const p=erigP[key];
+    if(p.tc){tempC=parseInt(document.getElementById('erigTC').value);tempEff=tEff(tempC,key.includes('daab')||key.includes('dabber')?'ss316l':'ceramic')*p.eff/0.90;}
+    else{tempC=p.tempC;tempEff=p.eff;}
+    tNote=p.tc?`${p.name} set to ${tempC}°C`:`${p.name} fixed ~${tempC}°C`;
+  }else if(cat==='emesh'){
+    const meshMg=parseFloat(document.getElementById('meshMg').value)||15;
+    const baseEff=parseFloat(document.getElementById('meshFine').value);
+    const tSet=parseInt(document.getElementById('meshTemp').value);
+    let eff=baseEff;if(tSet<170)eff*=0.80;else if(tSet>220)eff*=0.85;
+    const inh=parseFloat(document.getElementById('inhale').value);const hd=parseFloat(document.getElementById('hold').value);
+    const fin=meshMg*eff*inh*hd;const lo=fin*0.82,hi=fin*1.18;
+    renderOut(fin,lo,hi,tSet,eff,`E-mesh SS316L TC @ ${tSet}°C`,'#534ab7',
+      `<div class="math-row"><span>DMT loaded (freebase)</span><span class="v">${meshMg}mg</span></div><div class="hdiv"></div>
+       <div class="math-row pen"><span>× mesh efficiency (${eff.toFixed(2)})</span><span class="v">${(meshMg*eff).toFixed(2)}mg</span></div>
+       <div class="math-row pen"><span>× inhale (${inh})</span><span class="v">${(meshMg*eff*inh).toFixed(2)}mg</span></div>
+       <div class="math-row pen"><span>× hold (${hd})</span><span class="v">${fin.toFixed(2)}mg</span></div>
+       <div class="hdiv"></div><div class="math-total"><span>Estimated bioavailable</span><span class="v">${fin.toFixed(1)}mg</span></div>
+       <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Range: ${lo.toFixed(1)}–${hi.toFixed(1)}mg (±18%)</div>`,[],[]);return;
+  }else if(cat==='subohm'){
+    const sp=sohmP[document.getElementById('sohmDev').value];const w=parseFloat(document.getElementById('soW').value);
+    if(document.getElementById('soMode').value==='tc'){tempC=parseInt(document.getElementById('soTC').value);}else{tempC=wToT(w);}
+    tempEff=tEff(tempC,sp.coil)*(sp.eff/0.90);tNote=`Sub-ohm @ ${tempC}°C`;
+  }else if(cat==='tc'){
+    tempC=parseInt(document.getElementById('tcT').value);tempEff=tEff(tempC,'ceramic');tNote=`TC vaporizer @ ${tempC}°C`;
+  }else if(cat==='glass'){
+    tempC=480;tempEff=parseFloat(document.getElementById('glassExp').value);tNote='Glass + torch ~400–600°C';
+  }else{
+    const cv=parseFloat(document.getElementById('cV').value)||3.2;const cr=parseFloat(document.getElementById('cR').value)||1.0;
+    const cm=document.getElementById('cMat').value;const w=(cv*cv)/cr;tempC=wToT(w);tempEff=tEff(tempC,cm);
+    tNote=`Custom ${cv}V/${cr}Ω → ${w.toFixed(1)}W → ~${tempC}°C`;
+  }
+  tCol=tempC<160?'#eda100':tempC<=215?'#1baf7a':tempC<=230?'#eda100':'#e34948';
+  const vol=parseFloat(document.getElementById('vol').value);const conc=parseFloat(document.getElementById('conc').value);
+  const carrier=parseFloat(document.getElementById('carrier').value);const crys=Math.min(1.0,parseFloat(document.getElementById('crys').value)+parseFloat(document.getElementById('warm').value));
+  const inh=parseFloat(document.getElementById('inhale').value);const pd=parseFloat(document.getElementById('pdur').value);
+  const hd=parseFloat(document.getElementById('hold').value);const puffs=parseInt(document.getElementById('puffs').value);
+  const ppc=parseInt(document.getElementById('ppc').value);const intv=parseFloat(document.getElementById('interval').value);
+  const totalMg=vol*conc;const mgPP=totalMg/ppc;const att=puffs*mgPP;
+  const aT=att*tempEff;const aC=aT*carrier;const aCr=aC*crys;const aI=aCr*pd*inh;const aH=aI*hd;const fin=aH*intv;
+  const lo=fin*0.7,hi=fin*1.4;
+  const warns=[],haz=[];
+  if(tempC<160)warns.push('Temperature below DMT vaporization point — insufficient vapor. Increase wattage or switch device/coil.');
+  if(tempC>220&&cat!=='glass')warns.push('Temperature above combustion threshold — DMT degrading. Reduce wattage or use TC mode.');
+  if(cat==='glass')haz.push('Glass pipe + torch: not recommended during CH attack. Hot glass + DMT disorientation = burn and fall risk.');
+  if(cat==='emesh')haz.push('E-mesh requires pre-loading before attack onset — loading powder during Kip 8+ attack is not feasible.');
+  if(cat==='erig'&&document.getElementById('erigDev').value==='yocan_orbit_mid')haz.push('Yocan Orbit 3.7V exceeds DMT combustion threshold. Switch to White (3.4V) setting only.');
+  if(cat==='erig'&&document.getElementById('erigDev').value==='yocan_orbit_high')haz.push('Yocan Orbit 4.0V: heavy combustion — majority of DMT destroyed. Use White (3.4V) only.');
+  if(conc>200&&cat==='pod')warns.push('Concentration >200mg/ml risks pod coil burnout. Use 75–150mg/ml for pod systems.');
+  if(parseFloat(document.getElementById('interval').value)===0.7)warns.push('Chain vaping without waiting: DMT onset is 30–60 sec — dose stacking risk.');
+  if(fin>25)warns.push('Breakthrough range estimate — not recommended for CH abort context. Reduce puffs or concentration.');
+  renderOut(fin,lo,hi,tempC,tempEff,tNote,tCol,
+    `<div class="math-row"><span>Total (${vol}ml × ${conc}mg/ml)</span><span class="v">${totalMg.toFixed(0)}mg</span></div>
+     <div class="math-row"><span>Per puff (÷${ppc})</span><span class="v">${mgPP.toFixed(2)}mg/puff</span></div>
+     <div class="math-row"><span>× ${puffs} puff${puffs>1?'s':''}</span><span class="v">${att.toFixed(2)}mg</span></div>
+     <div class="hdiv"></div>
+     <div class="math-row pen"><span>× temp efficiency (${tempEff.toFixed(2)})</span><span class="v">${aT.toFixed(2)}mg</span></div>
+     <div class="math-row pen"><span>× carrier (${carrier})</span><span class="v">${aC.toFixed(2)}mg</span></div>
+     <div class="math-row pen"><span>× crystallization (${crys.toFixed(2)})</span><span class="v">${aCr.toFixed(2)}mg</span></div>
+     <div class="math-row pen"><span>× dur×inhale (${(pd*inh).toFixed(2)})</span><span class="v">${aI.toFixed(2)}mg</span></div>
+     <div class="math-row pen"><span>× hold (${hd})</span><span class="v">${aH.toFixed(2)}mg</span></div>
+     <div class="math-row pen"><span>× interval (${intv})</span><span class="v"></span></div>
+     <div class="hdiv"></div><div class="math-total"><span>Estimated bioavailable</span><span class="v">${fin.toFixed(1)}mg</span></div>
+     <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Range: ${lo.toFixed(1)}–${hi.toFixed(1)}mg (±30–40%)</div>`,
+    warns,haz);
+}
+function renderOut(fin,lo,hi,tempC,tempEff,tNote,tCol,mathHTML,warns,haz){
+  document.getElementById('gVal').textContent=fin.toFixed(1);
+  document.getElementById('gRange').textContent=`range: ${lo.toFixed(1)}–${hi.toFixed(1)} mg`;
+  const pct=Math.min(100,(fin/40)*100);
+  const fill=document.getElementById('gFill');
+  fill.style.width=pct+'%';fill.style.background=fin<5?'#1baf7a':fin<15?'#2a78d6':fin<25?'#eda100':'#e34948';
+  let zt='',zc='';
+  if(fin<5){zt='Sub-threshold — likely no perceptual effect';zc='fs';}else if(fin<15){zt='Abort window — moderate psychedelic effect';zc='fa';}else if(fin<25){zt='Moderate–strong — approaching breakthrough';zc='fm';}else{zt='Breakthrough range';zc='fb';}
+  document.getElementById('gFlag').innerHTML=`<span class="flag ${zc}">${zt}</span>`;
+  document.getElementById('tempReadout').innerHTML=`<span style="color:${tCol};font-weight:600;">~${tempC}°C</span> — Efficiency: <strong>${tempEff.toFixed(2)}</strong> (${Math.round(tempEff*100)}% DMT preserved)<br><span style="font-size:10px;color:var(--text-muted);">${tNote}</span>`;
+  const wb=document.getElementById('warnBox');
+  if(warns&&warns.length){wb.innerHTML=warns.map(w=>`⚠ ${w}`).join('<br>');wb.classList.add('show');}else wb.classList.remove('show');
+  const hb=document.getElementById('hazBox');
+  if(haz&&haz.length){hb.innerHTML=haz.map(h=>`🛑 ${h}`).join('<br>');hb.classList.add('show');}else hb.classList.remove('show');
+  document.getElementById('mathBreak').innerHTML=mathHTML;
+}
+document.querySelectorAll('select,input').forEach(el=>{el.addEventListener('change',calc);el.addEventListener('input',calc);});
+updateErigDev();calc();
+</script>
+</body>
+</html>
