@@ -24,8 +24,6 @@ The calculator covers the full range of common community-reported delivery metho
 
 **→ [Launch the calculator](https://CHARC-ORG.github.io/nndmt-ch-dose-estimator)**
 
-*(Replace USERNAME with your GitHub username after deployment)*
-
 ---
 
 ## The Dose Model
@@ -141,6 +139,10 @@ If you use this tool in research, please cite:
 [King Frey / CHARC]. (2026). nnDMT CH Abort Dose Estimator (v1.0.0). Zenodo. https://doi.org/PLACEHOLDER
 ```
 
+## Feature / Device Requests
+
+email wearecharc@gmail.com
+
 See `CITATION.cff` for machine-readable citation metadata.
 
 ---
@@ -160,7 +162,7 @@ See `CITATION.cff` for machine-readable citation metadata.
 
 This tool is for harm reduction education and research survey design only. It does not constitute medical advice. DMT is a Schedule I controlled substance in the United States and regulated or prohibited in most jurisdictions. Nothing in this tool facilitates illegal activity.
 
-The developer has lived experience with cluster headache and PTSD as a combat veteran. This project is motivated by advocacy for a patient population that has been inadequately served by conventional medicine.
+The developer has lived experience with cluster headache and PTSD as a USMC combat veteran. This project is motivated by advocacy for a patient population that has been inadequately served by conventional medicine.
 
 ---
 
