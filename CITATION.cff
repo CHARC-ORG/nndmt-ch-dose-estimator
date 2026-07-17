@@ -13,9 +13,9 @@ authors:
   - family-names: "[FREY]"
     given-names: "[KING]"
     alias: "ChickenDaddy"
-    affiliation: "ClusterInfo.org / ClusterBuds Peer Support"
+    affiliation: "Cluster Headache Applied Research Collective (CHARC) / ClusterBuds Peer Support"
 version: "1.0.0"
-date-released: "2026-07-16"
+date-released: "2026-07-17"
 license: MIT
 repository-code: "https://github.com/CHARC-ORG/nndmt-ch-dose-estimator"
 url: "https://CHARC-ORG.github.io/nndmt-ch-dose-estimator"
